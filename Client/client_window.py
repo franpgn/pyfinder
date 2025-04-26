@@ -162,15 +162,4 @@ class Ui_MainWindow(object):
         self.menufile.setTitle(_translate("MainWindow", "file"))
         self.actionAdd_IP.setText(_translate("MainWindow", "Add IP"))
 
-class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setupUi(self)
-        self.actionAdd_IP.triggered.connect(self.show_ip_dialog)
 
-    def show_ip_dialog(self):
-        dialog = IPDialog(self)
-        if dialog.exec_() == QtWidgets.QDialog.Accepted:
-            ip = dialog.lineEdit.text()
-            port = dialog.lineEdit_2.text()
-            print(f"IP: {ip}, Port: {port}")
