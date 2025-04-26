@@ -23,3 +23,11 @@ class User:
         filename = "data.json"
         with open(filename, "w") as file:
             json.dump(data, file)
+
+    def import_user(self):
+        filename = "data.json"
+        with open(filename, "r") as file:
+            data = json.load(file)
+            self.__name = data["nome"]
+            self.__cpf = data["cpf"]
+            self.__date = data["data"]

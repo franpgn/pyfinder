@@ -113,7 +113,7 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.pushButton.setText(_translate("MainWindow", "OPEN DB"))
+        self.pushButton.setText(_translate("MainWindow", "Open DB"))
         self.lineEdit.setText(_translate("MainWindow", "Port"))
         self.label.setText(_translate("MainWindow", "Threds"))
-        self.pushButton_2.setText(_translate("MainWindow", "START"))
+        self.pushButton_2.setText(_translate("MainWindow", "Start"))
