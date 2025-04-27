@@ -31,3 +31,4 @@ class User:
             self.__name = data["nome"]
             self.__cpf = data["cpf"]
             self.__date = data["data"]
+

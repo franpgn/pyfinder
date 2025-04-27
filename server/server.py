@@ -20,4 +20,3 @@ def handle_client(client_socket):
             print(f"Error: {e}")
             break
     client_socket.close()
-

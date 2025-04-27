@@ -1,7 +1,7 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
-from ip_window import Ui_Dialog, IPDialog
+from PyQt5 import QtWidgets
+from ip_window import IPDialog
 from client_window import Ui_MainWindow
-from client.user import User
+from repository.user import User
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
