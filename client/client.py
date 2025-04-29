@@ -2,8 +2,8 @@ from threading import Thread
 import socket
 import json
 import os
-import sys
 
+from repository.framing import send_json, recv_json
 from repository.request_data import RequestData
 from repository.response_data import ResponseData
 from repository.user import User
@@ -53,51 +53,38 @@ class Client(QtCore.QObject):
             self.logger.debug("Socket is None, cannot send.")
             return
         try:
-            user = User(name, cpf, date)
             self.id_request_increment()
-            data_bytes = RequestData.export_request(self.request_id, user)
-            self.sock.sendall(data_bytes)
-            self.logger.debug(f"Sent request {self.request_id} successfully.")
+            user = User(name, cpf, date)
+            send_json(self.sock, RequestData(self.request_id, user).to_dict())
+            self.logger.debug(f"Sent request {self.request_id}")
         except (BrokenPipeError, OSError) as e:
             self.logger.debug(f"[!] Failed to send data: {e}")
 
     def receive_response(self):
-        buffer = b""
         try:
             while True:
-                chunk = self.sock.recv(4096)
-                if not chunk:
+                resp = recv_json(self.sock)  # ← recebe UM frame
+                if resp is None:  # conexão encerrada
                     break
-                buffer += chunk
-                try:
-                    data = json.loads(buffer.decode('utf-8'))
-                    self.save_response(json.dumps(data).encode('utf-8'))
-                    buffer = b""
-                except json.JSONDecodeError:
-                    continue
+                self.save_response(
+                    ResponseData.from_dict(resp)  # ← converte e salva
+                )
         except Exception as e:
             self.logger.debug(f"Error receiving data: {e}")
 
-    def save_response(self, data_bytes):
-        data = ResponseData.import_response(data_bytes)
+    def save_response(self, data):
         request_id = data.get_response_id()
-        user_data = data.get_user_list_data()
 
         self.lista_id.append(request_id)
 
         filename = "responses.json"
-
         if os.path.exists(filename):
             with open(filename, "r", encoding="utf-8") as file:
                 responses = json.load(file)
         else:
             responses = {"responses": []}
 
-        new_response = {
-            "id": request_id,
-            "data": user_data
-        }
-        responses["responses"].append(new_response)
+        responses["responses"].append(data.to_dict())
 
         with open(filename, "w", encoding="utf-8") as file:
             json.dump(responses, file, indent=4, ensure_ascii=False)

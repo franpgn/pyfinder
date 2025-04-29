@@ -26,7 +26,7 @@ class DummyServer(threading.Thread):
         self.server = None
 
     def run(self) -> None:
-        self.server = Server((self.ip, self.port), ServerRequestHandler, workers=self.workers, db_path=self.parent._db_path)
+        self.server = Server((self.ip, self.port), ServerRequestHandler, workers=self.workers, db_path=self.parent.db_path)
         logger = logging.getLogger('Server')
         server_thread = threading.Thread(target=self.server.serve_forever)
         server_thread.start()
@@ -123,3 +123,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self._server.stop()
             self._server.join()
         super().closeEvent(event)
+
+    @property
+    def db_path(self):
+        return self._db_path

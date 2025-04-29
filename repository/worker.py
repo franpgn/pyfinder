@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import sqlite3
+import logging
 from repository.request_data import RequestData
 
 
@@ -58,6 +59,7 @@ class Worker:
             "response_id": request_data.get_request_id(),
             "user_data": users
         }
+        logging.info(f"Response: {response}")
         return response
 
 

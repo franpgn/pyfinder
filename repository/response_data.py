@@ -29,6 +29,8 @@ class ResponseData:
             data_list = json.loads(data_bytes)
         elif isinstance(data_bytes, dict):
             data_list = data_bytes
+        elif isinstance(data_bytes, bytes):
+            data_list = json.loads(data_bytes.decode('utf-8'))
         else:
             raise TypeError(f"Unsupported data type: {type(data_bytes)}")
 

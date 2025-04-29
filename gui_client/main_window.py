@@ -11,7 +11,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.actionAdd_IP.triggered.connect(self.show_ip_dialog)
         self.pushButton.clicked.connect(self.handle_search)
         self.lineEdit.setInputMask("000.000.000-00;_")
-        self.client = None
+        self.client = Client('localhost', 9000)
+        self.client.response_received.connect(self.update_table)
+        self.client.connect()
+        self.client.start_receiving()
 
         self.current_index = 0
         self.previousButton.clicked.connect(self.previous_id)
@@ -70,7 +73,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
             target_response = None
             for response in responses["responses"]:
-                if response["id"] == target_id:
+                if response["request_id"] == target_id:
                     target_response = response
                     break
 
@@ -78,19 +81,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 print(f"No response found with ID {target_id}")
                 return
 
-            data_list = target_response["data"]
+            data_list = target_response["user_data"]
 
             model = QtGui.QStandardItemModel()
             model.setHorizontalHeaderLabels(["Name", "CPF", "Birth Date"])
 
             if isinstance(data_list, list):
                 for user in data_list:
-                    name_item = QtGui.QStandardItem(str(user.get("nome", "")))
+                    name_item = QtGui.QStandardItem(str(user.get("name", "")))
                     cpf_item = QtGui.QStandardItem(str(user.get("cpf", "")))
                     date_item = QtGui.QStandardItem(str(user.get("date", "")))
                     model.appendRow([name_item, cpf_item, date_item])
             else:
-                name_item = QtGui.QStandardItem(str(data_list.get("nome", "")))
+                name_item = QtGui.QStandardItem(str(data_list.get("name", "")))
                 cpf_item = QtGui.QStandardItem(str(data_list.get("cpf", "")))
                 date_item = QtGui.QStandardItem(str(data_list.get("date", "")))
                 model.appendRow([name_item, cpf_item, date_item])

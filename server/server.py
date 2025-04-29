@@ -1,9 +1,11 @@
 import multiprocessing
 import socketserver
 import logging
+import time
 
 from multiprocessing import Pool
 
+from repository.framing import recv_json, send_json
 from repository.response_data import ResponseData
 from repository.worker import Worker
 from repository.request_data import RequestData
@@ -27,13 +29,24 @@ class ServerRequestHandler(socketserver.BaseRequestHandler):
         client_ip, client_port = self.client_address
         self.logger.debug(f"Connected client IP: {client_ip}, Port: {client_port}")
         try:
-            request_data = RequestData.import_request(self.request.recv(4096))
-            self.logger.debug('recv()->"%s"', request_data.to_dict())
-            response = self.server.pool.apply(Worker.database_query, (request_data,self.server.db_path))
-            response = ResponseData.export_response(ResponseData.import_response(response))
-            self.request.sendall(response)
+            while True:
+                request = recv_json(self.request)
+                if not request:
+                    break
+                request_data = RequestData.from_dict(request)
+                self.logger.debug('recv()->"%s"', request_data.to_dict())
+                response = self.process_request(request_data)
+                send_json(self.request, response)
         finally:
             self.request.close()
+
+    def process_request(self, request_data):
+        self.logger.debug('Processing request...')
+        resp = self.server.pool.apply(
+            Worker.database_query,
+            (request_data, self.server.db_path)
+        )
+        return ResponseData.import_response(resp).to_dict()
 
     def finish(self):
         self.logger.debug('Finish')
@@ -42,7 +55,7 @@ class ServerRequestHandler(socketserver.BaseRequestHandler):
 class Server(socketserver.ThreadingMixIn, socketserver.TCPServer):
     daemon_threads = True
     request_queue_size = 1000
-    def __init__(self, server_address, handler_class=ServerRequestHandler, workers: int = None, db_path: str = ''):
+    def __init__(self, server_address, handler_class=ServerRequestHandler, workers: int = None, db_path: str = None):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.debug('Initializing...')
         self.db_path = db_path
