@@ -26,5 +26,4 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         cpf = self.lineEdit.text()
         name = self.lineEdit_2.text()
         date = self.dateEdit.date()
-        self.client.add_requisition()
         self.client.send_user(cpf, name, date)

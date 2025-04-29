@@ -1,8 +1,8 @@
+from multiprocessing import Process
 import socket
 import json
 import os
 import sys
-
 from repository.user import User
 
 class Client:
@@ -11,6 +11,7 @@ class Client:
         self.server_port = server_port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.requisition = 0
+        self.receiver_process = None
 
     def connect(self):
         try:
@@ -22,14 +23,17 @@ class Client:
 
     def send_user(self, name, cpf, date):
         user = User(name, cpf, date)
+        self.add_requisition()
         data_bytes = user.export_user(self.requisition)
         self.sock.sendall(data_bytes)
+        self.start_receiving()
 
     def receive_response(self):
         try:
-            data_bytes = self.sock.recv(4096)
-            if data_bytes:
-                self.save_response(data_bytes)
+            while True:
+                data_bytes = self.sock.recv(4096)
+                if data_bytes:
+                    self.save_response(data_bytes)
         except Exception as e:
             print(f"Error receiving data: {e}")
 
@@ -65,6 +69,17 @@ class Client:
 
         print("Response saved successfully.")
 
+    def start_receiving(self):
+        self.receiver_process = Process(target=self.receive_response)
+        self.receiver_process.start()
+        print("Receiver process started.")
+
+    def stop_receiving(self):
+        if self.receiver_process:
+            self.receiver_process.terminate()
+            self.receiver_process.join()
+            print("Receiver process stopped.")
+
     def set_server_ip(self, server_ip):
         self.server_ip = server_ip
 
@@ -75,6 +90,6 @@ class Client:
         self.requisition += 1
 
     def close(self):
+        self.stop_receiving()
         self.sock.close()
-
 
