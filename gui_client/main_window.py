@@ -11,10 +11,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.actionAdd_IP.triggered.connect(self.show_ip_dialog)
         self.pushButton.clicked.connect(self.handle_search)
         self.lineEdit.setInputMask("000.000.000-00;_")
-        self.client = Client("localhost", 9000)
-        self.client.response_received.connect(self.update_table)
-        self.client.connect()
-        self.client.start_receiving()
         self.current_index = 0
         self.previousButton.clicked.connect(self.previous_id)
         self.nextButton.clicked.connect(self.next_id)

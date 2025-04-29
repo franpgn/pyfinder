@@ -15,7 +15,7 @@ def handleConnection(s: socket.socket, i):
     s.connect((HOST, PORT))
     time.sleep(2)
     # Send the data
-    data = ('{ "request_id": %s, "user_data": { "name": "WAGNER DA SILVA", "cpf": "", "date": "" }}'% i).encode('utf-8')
+    data = ('{ "request_id": %s, "user_data": { "name": "DANIEL FELIPE TOMM", "cpf": "", "date": "" }}'% i).encode('utf-8')
 
     logger.debug('Sending data: "%s"', data)
     s.sendall(data)
@@ -39,11 +39,10 @@ def handleConnection(s: socket.socket, i):
 
 if __name__ == '__main__':
     from multiprocessing import freeze_support
-    freeze_support()  # recommended for Windows compatibility
+    freeze_support()
     plist = []
-    for i in range(1):
+    for i in range(12):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         process = multiprocessing.Process(target=handleConnection, args=(s, i))
         plist.append(process)
         process.start()
-        time.sleep(5)  # Optional: Add a small delay between process starts

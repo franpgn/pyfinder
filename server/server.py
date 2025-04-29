@@ -1,7 +1,4 @@
-import json
 import multiprocessing
-import os
-import socket
 import socketserver
 import logging
 import threading
@@ -45,7 +42,7 @@ class ServerRequestHandler(socketserver.BaseRequestHandler):
 
 class Server(socketserver.ThreadingMixIn, socketserver.TCPServer):
     daemon_threads = True
-    request_queue_size = 10
+    request_queue_size = 1000
     def __init__(self, server_address, handler_class=ServerRequestHandler):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.debug('Initializing...')
@@ -71,34 +68,11 @@ if __name__ == "__main__":
     server_thread.start()
 
     logger.info('Server on %s:%s', HOST, PORT)
-
-    # Connect to the server
-    # logger.debug('Creating socket')
-    # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # logger.debug('Connecting to server')
-    # s.connect((HOST, PORT))
-    #
-    # # Send the data
-    # data = '{ "request_id": 1, "user_data": { "name": "WAGNER DA SILVA", "cpf": "", "date": "" }}'.encode('utf-8')
-    #
-    # message = data
-    # logger.debug('Sending data: "%s"', message)
-    # len_sent = s.send(message)
-    #
-    # # Receive a response
-    # logger.debug('Waiting for response')
-    # chunks = []
-    # while True:
-    #     chunk = s.recv(4096)
-    #     if not chunk:
-    #         break
-    #     chunks.append(chunk)
-    #
-    # response = b''.join(chunks).decode('utf-8')
-    # response = ResponseData.import_response(response)
-    # logger.debug('Response from server: "%s"', response.to_dict())
-    #
-    # # Clean up
-    # logger.debug('Closing socket')
-    # # s.close()
-    # logger.debug('Done')
+    try:
+        while True:
+            pass
+    except KeyboardInterrupt: #TROCAR POR CONDIÇÃO DA GUI
+        logger.info('Server shutting down...')
+        server.shutdown()
+        server.server_close()
+        logger.info('Server closed.')

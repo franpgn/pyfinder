@@ -25,7 +25,7 @@ class Worker:
             if request_data.get_user_data().get_cpf():
                 query += ' AND cpf = ?'
                 if request_data.get_user_data().get_date():
-                    query += ' AND data = ?'
+                    query += ' AND nasc = ?'
                     cursor.execute(query, (request_data.get_user_data().get_name(), request_data.get_user_data().get_cpf(), request_data.get_user_data().get_date()))
                 else:
                     cursor.execute(query, (request_data.get_user_data().get_name(), request_data.get_user_data().get_cpf()))
@@ -34,12 +34,12 @@ class Worker:
         elif request_data.get_user_data().get_cpf():
             query += ' cpf = ?'
             if request_data.get_user_data().get_date():
-                query += ' AND data = ?'
+                query += ' AND nasc = ?'
                 cursor.execute(query, (request_data.get_user_data().get_cpf(), request_data.get_user_data().get_date()))
             else:
                 cursor.execute(query, (request_data.get_user_data().get_cpf(),))
         elif request_data.get_user_data().get_date():
-            query += ' data = ?'
+            query += ' nasc = ?'
             if request_data.get_user_data().get_name():
                 query += ' AND nome = ?'
                 cursor.execute(query, (request_data.get_user_data().get_date(), request_data.get_user_data().get_name()))
@@ -48,7 +48,7 @@ class Worker:
         result = cursor.fetchall()
 
         users = []
-        for row in result:  # cada row é uma tupla
+        for row in result:
             user = {
                 "name": row[1],
                 "cpf": row[0],
@@ -61,3 +61,5 @@ class Worker:
             "user_data": users
         }
         return response
+
+
