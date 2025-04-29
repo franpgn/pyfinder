@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import json
 from client.client import Client
-from ip_window import Ui_Dialog, IPDialog
+from ip_window import IPDialog
 from client_window import Ui_MainWindow
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -11,10 +11,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.actionAdd_IP.triggered.connect(self.show_ip_dialog)
         self.pushButton.clicked.connect(self.handle_search)
         self.lineEdit.setInputMask("000.000.000-00;_")
-        self.client = Client("localhost", 9000)
-        self.client.response_received.connect(self.update_table)
-        self.client.connect()
-        self.client.start_receiving()
+        self.client = None
+
         self.current_index = 0
         self.previousButton.clicked.connect(self.previous_id)
         self.nextButton.clicked.connect(self.next_id)
@@ -22,9 +20,22 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def show_ip_dialog(self):
         dialog = IPDialog(self)
         if dialog.exec_() == QtWidgets.QDialog.Accepted:
-            self.client = Client(dialog.lineEdit.text(), int(dialog.lineEdit_2.text()))
-            self.client.connect()
-            self.client.start_receiving()
+            try:
+                self.client = Client(dialog.lineEdit.text(), int(dialog.lineEdit_2.text()))
+                self.client.response_received.connect(self.update_table)
+                self.client.connect()
+                self.client.start_receiving()
+            except ConnectionError as e:
+                self.show_error_message(str(e))
+
+    def show_error_message(self, message):
+        msg_box = QtWidgets.QMessageBox(self)
+        msg_box.setIcon(QtWidgets.QMessageBox.Critical)
+        msg_box.setWindowTitle("Connection Error")
+        msg_box.setText("An error occurred while connecting:")
+        msg_box.setInformativeText(message)
+        msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msg_box.exec_()
 
     def handle_search(self):
         cpf = self.lineEdit.text()
@@ -34,7 +45,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if date > QtCore.QDate(2024, 1, 1):
             date_string = ""
         else:
-            date_string = date.toString("dd/MM/yyyy")
+            date_string = date.toString("yyyy-MM-dd")
 
         if self.client:
             self.client.send_user(name, cpf, date_string)
@@ -43,7 +54,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def closeEvent(self, event):
         if self.client:
-            print("Closing client connection...")
             self.client.close()
         event.accept()
 

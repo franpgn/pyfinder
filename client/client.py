@@ -3,17 +3,30 @@ import socket
 import json
 import os
 import sys
+
+from repository.request_data import RequestData
+from repository.response_data import ResponseData
 from repository.user import User
 from PyQt5 import QtCore
+import logging
+
+logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s',)
 
 class Client(QtCore.QObject):
     response_received = QtCore.pyqtSignal()
     def __init__(self, server_ip, server_port):
         super().__init__()
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger.debug('__init__')
         self.server_ip = server_ip
         self.server_port = server_port
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.requisition = 0
+        try:
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        except Exception as e:
+            self.logger.debug(f"Connection failed: {e}")
+            raise ConnectionError(f"Could not connect to {self.server_ip}:{self.server_port}.\nError: {e}")
+
+        self.request_id = 0
         self.receiver_thread = None
         self.lista_id = []
 
@@ -24,29 +37,29 @@ class Client(QtCore.QObject):
                     self.sock.getpeername()
                     self.sock.shutdown(socket.SHUT_RDWR)
                     self.sock.close()
-                    print("Previous socket closed successfully before reconnecting.")
+                    self.logger.debug("Previous socket closed successfully before reconnecting.")
                 except OSError:
-                    print("Socket was not connected. Creating a new one.")
+                    self.logger.debug("Socket was not connected. Creating a new one.")
 
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.connect((self.server_ip, self.server_port))
-            print(f"Connected to {self.server_ip}:{self.server_port}")
+            self.logger.debug(f"Connected to {self.server_ip}:{self.server_port}")
         except Exception as e:
-            print(f"Connection failed: {e}")
-            sys.exit()
+            self.logger.debug(f"Connection failed: {e}")
+            raise ConnectionError(f"Could not connect to {self.server_ip}:{self.server_port}.\nError: {e}")
 
     def send_user(self, name, cpf, date):
         if self.sock is None:
-            print("Socket is None, cannot send.")
+            self.logger.debug("Socket is None, cannot send.")
             return
         try:
             user = User(name, cpf, date)
-            self.add_requisition()
-            data_bytes = user.export_user(self.requisition)
+            self.id_request_increment()
+            data_bytes = RequestData.export_request(self.request_id, user)
             self.sock.sendall(data_bytes)
-            print(f"Sent request {self.requisition} successfully.")
+            self.logger.debug(f"Sent request {self.request_id} successfully.")
         except (BrokenPipeError, OSError) as e:
-            print(f"[!] Failed to send data: {e}")
+            self.logger.debug(f"[!] Failed to send data: {e}")
 
     def receive_response(self):
         buffer = b""
@@ -63,12 +76,12 @@ class Client(QtCore.QObject):
                 except json.JSONDecodeError:
                     continue
         except Exception as e:
-            print(f"Error receiving data: {e}")
+            self.logger.debug(f"Error receiving data: {e}")
 
     def save_response(self, data_bytes):
-        data = json.loads(data_bytes.decode('utf-8'))
-        request_id = data["id"]
-        user_data = data["data"]
+        data = ResponseData.import_response(data_bytes)
+        request_id = data.get_response_id()
+        user_data = data.get_user_list_data()
 
         self.lista_id.append(request_id)
 
@@ -82,7 +95,7 @@ class Client(QtCore.QObject):
 
         new_response = {
             "id": request_id,
-            "data": user_data  # salva diretamente, mesmo se for lista
+            "data": user_data
         }
         responses["responses"].append(new_response)
 
@@ -90,12 +103,12 @@ class Client(QtCore.QObject):
             json.dump(responses, file, indent=4, ensure_ascii=False)
 
         self.response_received.emit()
-        print("Response saved successfully.")
+        self.logger.debug("Response saved successfully.")
 
     def start_receiving(self):
         self.receiver_thread = Thread(target=self.receive_response, daemon=True)
         self.receiver_thread.start()
-        print("Receiver thread started.")
+        self.logger.debug("Receiver thread started.")
 
     def set_server_ip(self, server_ip):
         self.server_ip = server_ip
@@ -103,8 +116,8 @@ class Client(QtCore.QObject):
     def set_server_port(self, server_port):
         self.server_port = server_port
 
-    def add_requisition(self):
-        self.requisition += 1
+    def id_request_increment(self):
+        self.request_id += 1
 
     def get_lista_id(self):
         return self.lista_id
