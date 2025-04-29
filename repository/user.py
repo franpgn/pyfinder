@@ -2,8 +2,8 @@ import json
 class User:
     def __init__(self, name, cpf, date):
         self.__name = name
-        self.__date = cpf.replace(".", "").replace("-", "")
-        self.__cpf = date.toString("dd/MM/yyyy")
+        self.__date = date
+        self.__cpf = cpf.replace(".", "").replace("-", "")
 
     def get_name(self):
         return self.__name

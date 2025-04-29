@@ -13,69 +13,109 @@ from ip_window import Ui_Dialog, IPDialog
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
+        MainWindow.setObjectName("Client")
         MainWindow.resize(800, 600)
-        MainWindow.setStyleSheet("QWidget {\n"
-"    background-color: black;\n"
-"    color: white;\n"
-"}\n"
-"\n"
-"/* Campos de texto */\n"
-"QLineEdit {\n"
-"    background-color: #222;\n"
-"    color: white;\n"
-"    border: 1px solid #555;\n"
-"    padding: 4px;\n"
-"}\n"
-"\n"
-"/* Caixa de data */\n"
-"QDateEdit {\n"
-"    background-color: #222;\n"
-"    color: white;\n"
-"    border: 1px solid #555;\n"
-"    padding: 4px;\n"
-"}\n"
-"\n"
-"/* Labels */\n"
-"QLabel {\n"
-"    color: white;\n"
-"}\n"
-"\n"
-"/* Tabela */\n"
-"QTableWidget, QTableView {\n"
-"    background-color: #111;\n"
-"    color: white;\n"
-"    gridline-color: #444;\n"
-"    selection-background-color: #333;\n"
-"    selection-color: white;\n"
-"    border: 1px solid #555;\n"
-"}\n"
-"\n"
-"/* Cabeçalho da tabela */\n"
-"QHeaderView::section {\n"
-"    background-color: #222;\n"
-"    color: white;\n"
-"    padding: 4px;\n"
-"    border: 1px solid #444;\n"
-"}\n"
-"\n"
-"/* Botões */\n"
-"QPushButton {\n"
-"    background-color: #333;\n"
-"    color: white;\n"
-"    border: 1px solid #666;\n"
-"    border-radius: 4px;\n"
-"    padding: 6px 12px;\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"    background-color: #444;\n"
-"}\n"
-"\n"
-"QPushButton:pressed {\n"
-"    background-color: #222;\n"
-"}\n"
-"")
+        MainWindow.setStyleSheet("""
+        QWidget {
+            background-color: #1e1e1e;
+            color: #ffffff;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 14px;
+        }
+
+        /* Campos de texto */
+        QLineEdit, QDateEdit {
+            background-color: #2c2c2c;
+            color: #ffffff;
+            border: 1px solid #444444;
+            border-radius: 6px;
+            padding: 6px;
+        }
+
+        /* Labels */
+        QLabel {
+            color: #bbbbbb;
+        }
+
+        /* Tabela */
+        QTableView {
+            background-color: #252525;
+            alternate-background-color: #2d2d2d;
+            color: #ffffff;
+            gridline-color: #444444;
+            selection-background-color: #444444;
+            selection-color: #ffffff;
+            border: none;
+        }
+
+        /* Cabeçalho da tabela */
+        QHeaderView::section {
+            background-color: #333333;
+            color: #ffffff;
+            padding: 6px;
+            border: none;
+            font-weight: bold;
+        }
+
+        /* Botões */
+        QPushButton {
+            background-color: #3d7eff;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+        }
+
+        QPushButton:hover {
+            background-color: #629aff;
+        }
+
+        QPushButton:pressed {
+            background-color: #2c5eff;
+        }
+
+        /* Scroll */
+        QScrollBar:vertical, QScrollBar:horizontal {
+            background: #2c2c2c;
+            border: none;
+            width: 8px;
+            height: 8px;
+        }
+
+        QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+            background: #555555;
+            border-radius: 4px;
+        }
+        
+        /* Menu Bar */
+        QMenuBar {
+            background-color: #1e1e1e;
+        }
+        
+        QMenuBar::item {
+            background-color: transparent;
+            color: #ffffff;
+            padding: 4px 10px;
+        }
+        
+        QMenuBar::item:selected {
+            background-color: #333333;
+            color: #ffffff;
+        }
+        
+        /* Menu Dropdown */
+        QMenu {
+            background-color: #2c2c2c;
+            color: #ffffff;
+            border: 1px solid #444444;
+        }
+        
+        QMenu::item:selected {
+            background-color: #3d7eff;
+            color: #ffffff;
+        }
+        """)
+
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
@@ -107,6 +147,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.addWidget(self.label_3, 0, QtCore.Qt.AlignHCenter)
         self.dateEdit = QtWidgets.QDateEdit(self.frame)
         self.dateEdit.setObjectName("dateEdit")
+        self.dateEdit.setCalendarPopup(True)
+        self.dateEdit.setDate(QtCore.QDate(2025, 1, 1))
         self.verticalLayout_2.addWidget(self.dateEdit)
         self.pushButton = QtWidgets.QPushButton(self.frame)
         self.pushButton.setObjectName("pushButton")
@@ -128,7 +170,24 @@ class Ui_MainWindow(object):
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.tableView = QtWidgets.QTableView(self.scrollAreaWidgetContents)
+        # Criar um layout horizontal para os botões
+        self.buttonLayout = QtWidgets.QHBoxLayout()
+
+        self.previousButton = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
+        self.previousButton.setText("Previous")
+        self.previousButton.setObjectName("previousButton")
+        self.buttonLayout.addWidget(self.previousButton)
+
+        self.nextButton = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
+        self.nextButton.setText("Next")
+        self.nextButton.setObjectName("nextButton")
+        self.buttonLayout.addWidget(self.nextButton)
+
+        # Adicionar o layout de botões no verticalLayout_4 (embaixo da tabela)
+        self.verticalLayout_4.addLayout(self.buttonLayout)
+
         self.tableView.setObjectName("tableView")
+        self.tableView.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_4.addWidget(self.tableView)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.verticalLayout_3.addWidget(self.scrollArea)
