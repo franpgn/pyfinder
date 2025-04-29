@@ -1,93 +1,104 @@
-import socket
 import json
-import time
+import multiprocessing
+import os
+import socket
+import socketserver
+import logging
 import threading
 
-HOST = 'localhost'
-PORT = 9000
+from multiprocessing import Pool
 
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind((HOST, PORT))
-server_socket.listen(5)
+from repository.response_data import ResponseData
+from repository.worker import Worker
+from repository.request_data import RequestData
 
-id_counter = 0
-template_counter = 0  # Para alternar entre templates
+logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s',)
 
-print(f"[*] Servidor escutando em {HOST}:{PORT}")
+# -*- coding: utf-8 -*-
+class ServerRequestHandler(socketserver.BaseRequestHandler):
+    def __init__(self, request, client_address, server):
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger.debug('__init__')
+        super().__init__(request, client_address, server)
+        return
 
-# Templates diferentes
-templates = [
-    { "nome": "João Silva", "cpf": "123.456.789-00", "date": "1990-01-01" },
-    { "nome": "Maria Souza", "cpf": "987.654.321-00", "date": "1985-05-05" },
-    { "nome": "Carlos Santos", "cpf": "111.222.333-44", "date": "2000-10-10" }
-]
+    def setup(self):
+        self.logger.debug('Setup')
+        return super().setup()
 
-# Criar um lock para controlar o id_counter em ambiente multithread
-id_lock = threading.Lock()
+    def handle(self):
+        self.logger.debug('Handle')
+        client_ip, client_port = self.client_address
+        self.logger.debug(f"Connected client IP: {client_ip}, Port: {client_port}")
+        try:
+            request_data = RequestData.import_request(self.request.recv(4096))
+            self.logger.debug('recv()->"%s"', request_data.to_dict())
+            response = pool.apply(Worker.database_query, (request_data,))
+            response = ResponseData.export_response(ResponseData.import_response(response))
+            self.request.sendall(response)
+        finally:
+            self.request.close()
 
-def handle_client(client_socket, address):
-    global id_counter, template_counter
+    def finish(self):
+        self.logger.debug('Finish')
+        return super().finish()
 
-    print(f"[+] Connected to {address[0]}:{address[1]}")
+class Server(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    daemon_threads = True
+    request_queue_size = 10
+    def __init__(self, server_address, handler_class=ServerRequestHandler):
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger.debug('Initializing...')
+        super().__init__(server_address, handler_class)
+        return
 
-    try:
+    def server_activate(self):
+        self.logger.debug('Server is Active!')
+        return super().server_activate()
+
+    def serve_forever(self, poll_interval=0.5):
+        self.logger.debug('Waiting for connections...')
         while True:
-            data = client_socket.recv(4096)
-            if not data:
-                print(f"[!] Client {address[0]}:{address[1]} disconnected.")
-                break
+            self.handle_request()
+        return
 
-            decoded_data = data.decode('utf-8')
-            json_data = json.loads(decoded_data)
-            print(f"[>] JSON received from {address[0]}:{address[1]}:")
-            print(json.dumps(json_data, indent=4, ensure_ascii=False))
+if __name__ == "__main__":
+    HOST, PORT = "localhost", 9000
+    pool = Pool(processes=max(1, multiprocessing.cpu_count() - 1))
+    server = Server((HOST, PORT), ServerRequestHandler)
+    logger = logging.getLogger('Server')
+    server_thread = threading.Thread(target=server.serve_forever)
+    server_thread.start()
 
-            print("[*] Processing...")
-            time.sleep(2)  # Simula o tempo de processamento
+    logger.info('Server on %s:%s', HOST, PORT)
 
-            with id_lock:
-                id_counter += 1
-                current_id = id_counter
-
-            # Escolher template atual
-            base_user = templates[template_counter]
-
-            # Gerar 100 usuários
-            users = []
-            for i in range(100):
-                user = {
-                    "nome": f"{base_user['nome']} {i+1}",
-                    "cpf": f"{i:03}.{i:03}.{i:03}-{i%100:02}",
-                    "date": base_user['date']
-                }
-                users.append(user)
-
-            # Montar resposta
-            response_json = {
-                "id": current_id,
-                "data": users
-            }
-
-            # Alternar o template para a próxima resposta
-            template_counter = (template_counter + 1) % 3
-
-            # Enviar resposta
-            response = json.dumps(response_json) + '\n'  # <<< importante para cliente conseguir separar
-            client_socket.sendall(response.encode('utf-8'))
-            print(f"[*] Response sent to {address[0]}:{address[1]} (ID: {current_id})")
-
-    except Exception as e:
-        print(f"[!] Error with client {address[0]}:{address[1]}: {e}")
-    finally:
-        client_socket.close()
-        print(f"[-] Connection with {address[0]}:{address[1]} closed.")
-
-try:
-    while True:
-        client_socket, address = server_socket.accept()
-        client_thread = threading.Thread(target=handle_client, args=(client_socket, address))
-        client_thread.start()
-
-except KeyboardInterrupt:
-    print("\n[*] Shutting down server.")
-    server_socket.close()
+    # Connect to the server
+    # logger.debug('Creating socket')
+    # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # logger.debug('Connecting to server')
+    # s.connect((HOST, PORT))
+    #
+    # # Send the data
+    # data = '{ "request_id": 1, "user_data": { "name": "WAGNER DA SILVA", "cpf": "", "date": "" }}'.encode('utf-8')
+    #
+    # message = data
+    # logger.debug('Sending data: "%s"', message)
+    # len_sent = s.send(message)
+    #
+    # # Receive a response
+    # logger.debug('Waiting for response')
+    # chunks = []
+    # while True:
+    #     chunk = s.recv(4096)
+    #     if not chunk:
+    #         break
+    #     chunks.append(chunk)
+    #
+    # response = b''.join(chunks).decode('utf-8')
+    # response = ResponseData.import_response(response)
+    # logger.debug('Response from server: "%s"', response.to_dict())
+    #
+    # # Clean up
+    # logger.debug('Closing socket')
+    # # s.close()
+    # logger.debug('Done')
