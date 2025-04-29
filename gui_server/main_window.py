@@ -1,33 +1,46 @@
 # main_window.py
 from __future__ import annotations
 
+import logging
 import threading
 import time
+
 from pathlib import Path
 from typing import Optional
 
 from PyQt5 import QtCore, QtWidgets
+
+from server.server import ServerRequestHandler, Server
 from ui_main_window import Ui_MainWindow
 
 
 class DummyServer(threading.Thread):
-    """
-    Very small background thread that just prints a heartbeat every
-    two seconds – replace with your real server implementation.
-    """
-    def __init__(self, port: int, workers: int, parent: "MainWindow"):
+    def __init__(self, ip: str, port: int, workers: int, parent: "MainWindow"):
         super().__init__(daemon=True)
         self._alive = threading.Event()
         self._alive.set()
+        self.ip = ip
         self.port = port
         self.workers = workers
         self.parent = parent
+        self.server = None
 
     def run(self) -> None:
-        while self._alive.is_set():
-            print(f"[DummyServer] running on port {self.port} "
-                  f"with {self.workers} workers…")
-            time.sleep(2)
+        self.server = Server((self.ip, self.port), ServerRequestHandler, workers=self.workers, db_path=self.parent._db_path)
+        logger = logging.getLogger('Server')
+        server_thread = threading.Thread(target=self.server.serve_forever)
+        server_thread.start()
+
+        logger.info('Server running on %s:%s', self.ip, self.port)
+
+        try:
+            while self._alive.is_set():
+                time.sleep(0.5)
+        finally:
+            logger.info('Server shutting down...')
+            self.server.shutdown()
+            self.server.server_close()
+            logger.info('Server closed.')
 
     def stop(self) -> None:
         self._alive.clear()
@@ -47,7 +60,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.pushButton_2.clicked.connect(self._toggle_server) # Start / Stop
 
         # sensible defaults
-        self.lineEdit.setPlaceholderText("9000")  # default port
+        self.lineEdit_port.setPlaceholderText("9000")  # default port
+        self.lineEdit_ip.setPlaceholderText("127.0.0.1")  # default IP
         self.spinBox.setRange(1, 64)
         self.spinBox.setValue(4)
 
@@ -65,19 +79,22 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self, "DB selected", f"Using database:\n{self._db_path}"
             )
 
+
     def _toggle_server(self) -> None:
         if self._server and self._server.is_alive():
             # --- stop the running server ---------------------------------
             self._server.stop()
             self._server = None
-            self.pushButton_2.setText("Start")
+            self.pushButton_2.setText("Start Server")
             QtWidgets.QMessageBox.information(self, "Server stopped",
                                               "Server thread stopped.")
             return
 
         # --- start a new server ------------------------------------------
         try:
-            port = int(self.lineEdit.text() or self.lineEdit.placeholderText())
+            ip = self.lineEdit_ip.text() or self.lineEdit_ip.placeholderText()
+            port = int(self.lineEdit_port.text() or self.lineEdit_port.placeholderText())
+
         except ValueError:
             QtWidgets.QMessageBox.critical(self, "Invalid port",
                                            "Port must be an integer.")
@@ -90,12 +107,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             )
             return
 
-        self._server = DummyServer(port, workers, self)
+        self._server = DummyServer(ip, port, workers, self)
         self._server.start()
-        self.pushButton_2.setText("Stop")
+        self.pushButton_2.setText("Stop Server")
         QtWidgets.QMessageBox.information(
             self, "Server started",
-            f"Listening on port {port} with {workers} workers.\n"
+            f"Listening on {ip}:{port} with {workers} workers.\n"
             f"DB: {self._db_path}"
         )
 

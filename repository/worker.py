@@ -2,21 +2,19 @@
 import os
 import sqlite3
 from repository.request_data import RequestData
-from repository.response_data import ResponseData
-from repository.user import User
 
 
 class Worker:
-    def __init__(self):
-        self.conn = sqlite3.connect('C:/Redes/basecpf.db')
+    def __init__(self, db_path: str):
+        self.conn = sqlite3.connect(db_path)
         self.cursor = self.conn.cursor()
 
     def __del__(self):
         self.conn.close()
 
     @staticmethod
-    def database_query(request_data: RequestData):
-        conn = sqlite3.connect('C:/Redes/basecpf.db')
+    def database_query(request_data: RequestData, db_path: str):
+        conn = sqlite3.connect(db_path)
         print("PID ATUAL:" + str(os.getpid()))
         cursor = conn.cursor()
         query = 'SELECT * FROM cpf WHERE'
