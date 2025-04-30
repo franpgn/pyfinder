@@ -12,7 +12,6 @@ from repository.request_data import RequestData
 
 logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s',)
 
-# -*- coding: utf-8 -*-
 class ServerRequestHandler(socketserver.BaseRequestHandler):
     def __init__(self, request, client_address, server):
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -77,7 +76,6 @@ class Server(socketserver.ThreadingMixIn, socketserver.TCPServer):
         return
 
     def shutdown(self):
-        # Quando fechar, terminar o pool também
         self.logger.debug('Shutting down server and pool...')
         super().shutdown()
         self.pool.close()

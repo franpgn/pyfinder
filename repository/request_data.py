@@ -45,13 +45,3 @@ class RequestData:
             raise ValueError("user_data must be an instance of User")
         request_data = RequestData(request_id, user_data)
         return json.dumps(request_data.to_dict()).encode('utf-8')
-
-if __name__ == "__main__":
-    # Example usage
-    data = ('{ "request_id": 1, "user_data": { "nome": "John Doe", "cpf": "12345678900", "data": "01/01/2000" }}').encode('utf-8')
-
-    request_data = RequestData.import_request(data)
-
-    exported = RequestData.export_request(request_data.get_request_id(), request_data.get_user_data())
-
-    print(exported)  # Output: 1

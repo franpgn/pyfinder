@@ -61,5 +61,3 @@ class Worker:
         }
         logging.info(f"Response: {response}")
         return response
-
-

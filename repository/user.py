@@ -1,7 +1,8 @@
 import json
+from unidecode import unidecode
 class User:
     def __init__(self, name: str, cpf, date):
-        self.__name = name or ""
+        self.__name = unidecode(name.upper()) or ""
         self.__cpf = cpf.replace(".", "").replace("-", "") or ""
         self.__date = date or ""
 
@@ -15,7 +16,7 @@ class User:
     @staticmethod
     def from_dict(data):
         return User(
-            name=data.get("name", ""),
+            name=unidecode(data.get("name", "").upper()),
             cpf=data.get("cpf", "").replace(".", "").replace("-", ""),
             date=data.get("date", "")
         )
@@ -31,7 +32,7 @@ class User:
 
     def export_user(self):
         user_data = {
-                "nome": self.__name,
+                "nome": unidecode(self.__name.upper()),
                 "cpf": self.__cpf,
                 "date": self.__date
         }
@@ -40,7 +41,7 @@ class User:
 
     def import_user(self, data):
         user_data = data["user_data"]
-        self.__name = user_data["nome"]
+        self.__name = unidecode(user_data["nome"].upper())
         self.__cpf = user_data["cpf"]
         self.__date = user_data["data"]
 

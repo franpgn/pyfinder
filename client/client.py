@@ -63,11 +63,11 @@ class Client(QtCore.QObject):
     def receive_response(self):
         try:
             while True:
-                resp = recv_json(self.sock)  # ← recebe UM frame
-                if resp is None:  # conexão encerrada
+                resp = recv_json(self.sock)
+                if resp is None:
                     break
                 self.save_response(
-                    ResponseData.from_dict(resp)  # ← converte e salva
+                    ResponseData.from_dict(resp)
                 )
         except Exception as e:
             self.logger.debug(f"Error receiving data: {e}")

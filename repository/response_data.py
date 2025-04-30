@@ -50,14 +50,3 @@ class ResponseData:
     def export_response(response_data):
         response_data = ResponseData(response_data.get_response_id(), response_data.get_user_list_data())
         return json.dumps(response_data.to_dict()).encode('utf-8')
-
-if __name__ == "__main__":
-    # Example usage
-    data = ('{ "response_id": 1, "user_data": [{ "nome": "John Doe", "cpf": "12345678900", "data": "01/01/2000" }, '
-            '{ "nome": "John 2", "cpf": "12345678900", "data": "01/01/2000" }]}').encode('utf-8')
-
-    imported = ResponseData.import_response(data)
-
-    exported = ResponseData.export_response((imported.get_response_id(), imported.get_user_list_data()))
-
-    print(exported)
