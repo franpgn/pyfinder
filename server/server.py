@@ -36,6 +36,8 @@ class ServerRequestHandler(socketserver.BaseRequestHandler):
                 self.logger.debug('recv()->"%s"', request_data.to_dict())
                 response = self.process_request(request_data)
                 send_json(self.request, response)
+        except ConnectionResetError:
+           self.logger.warning("Client dropped connection abruptly")
         finally:
             self.request.close()
 

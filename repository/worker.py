@@ -51,6 +51,7 @@ class Worker:
             user = {
                 "name": row[1],
                 "cpf": row[0],
+                "gender": row[2],
                 "date": row[3]
             }
             users.append(user)

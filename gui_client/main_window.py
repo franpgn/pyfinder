@@ -1,3 +1,5 @@
+from multiprocessing.util import debug
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 import json
 from client.client import Client
@@ -51,7 +53,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             date_string = date.toString("yyyy-MM-dd")
 
         if self.client:
-            self.client.send_user(name, cpf, date_string)
+            self.client.send_user(name, cpf, "", date_string)
         else:
             print("No connection on the server")
 
@@ -75,6 +77,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             for response in responses["responses"]:
                 if response["request_id"] == target_id:
                     target_response = response
+                    print(target_response)
                     break
 
             if not target_response:
@@ -82,21 +85,23 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 return
 
             data_list = target_response["user_data"]
-
+            print(data_list)
             model = QtGui.QStandardItemModel()
-            model.setHorizontalHeaderLabels(["Name", "CPF", "Birth Date"])
+            model.setHorizontalHeaderLabels(["Name", "CPF", "Gender", "Birth Date"])
 
             if isinstance(data_list, list):
                 for user in data_list:
                     name_item = QtGui.QStandardItem(str(user.get("name", "")))
                     cpf_item = QtGui.QStandardItem(str(user.get("cpf", "")))
+                    gender_item = QtGui.QStandardItem(str(user.get("gender", "")))
                     date_item = QtGui.QStandardItem(str(user.get("date", "")))
-                    model.appendRow([name_item, cpf_item, date_item])
+                    model.appendRow([name_item, cpf_item, gender_item, date_item])
             else:
                 name_item = QtGui.QStandardItem(str(data_list.get("name", "")))
                 cpf_item = QtGui.QStandardItem(str(data_list.get("cpf", "")))
+                gender_item = QtGui.QStandardItem(str(data_list.get("gender", "")))
                 date_item = QtGui.QStandardItem(str(data_list.get("date", "")))
-                model.appendRow([name_item, cpf_item, date_item])
+                model.appendRow([name_item, cpf_item, gender_item, date_item])
 
             self.tableView.setModel(model)
             self.tableView.horizontalHeader().setStretchLastSection(True)
