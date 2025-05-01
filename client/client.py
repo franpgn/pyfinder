@@ -1,14 +1,14 @@
-from threading import Thread
 import socket
 import json
 import os
+import logging
 
+from threading import Thread
 from repository.framing import send_json, recv_json
 from repository.request_data import RequestData
 from repository.response_data import ResponseData
 from repository.user import User
 from PyQt5 import QtCore
-import logging
 
 logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s',)
 

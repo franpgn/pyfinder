@@ -1,5 +1,6 @@
 import json
 from unidecode import unidecode
+
 class User:
     def __init__(self, name: str, cpf, gender, date):
         print("DEBUG gender raw:", repr(gender))

@@ -1,5 +1,3 @@
-from multiprocessing.util import debug
-
 from PyQt5 import QtCore, QtGui, QtWidgets
 import json
 from client.client import Client
