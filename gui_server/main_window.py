@@ -55,13 +55,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._db_path: Optional[Path] = None
         self._server: Optional[DummyServer] = None
 
-        # wire-up signals
-        self.pushButton.clicked.connect(self._choose_db)       # Open DB
-        self.pushButton_2.clicked.connect(self._toggle_server) # Start / Stop
+        self.pushButton.clicked.connect(self._choose_db)
+        self.pushButton_2.clicked.connect(self._toggle_server)
 
-        # sensible defaults
-        self.lineEdit_port.setPlaceholderText("9000")  # default port
-        self.lineEdit_ip.setPlaceholderText("127.0.0.1")  # default IP
+        self.lineEdit_port.setPlaceholderText("9000")
+        self.lineEdit_ip.setPlaceholderText("0.0.0.0")
         self.spinBox.setRange(1, 64)
         self.spinBox.setValue(4)
 
