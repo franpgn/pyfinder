@@ -4,6 +4,7 @@ import sqlite3
 import logging
 from repository.request_data import RequestData
 
+logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s',)
 
 class Worker:
     def __init__(self, db_path: str):
@@ -15,8 +16,12 @@ class Worker:
 
     @staticmethod
     def database_query(request_data: RequestData, db_path: str):
+        logger = logging.getLogger('Worker')
         conn = sqlite3.connect(db_path)
-        print("PID ATUAL:" + str(os.getpid()))
+
+        logger.info('Database connection established')
+        logger.debug('Current PID : %s', os.getpid())
+
         cursor = conn.cursor()
         query = 'SELECT * FROM cpf WHERE'
         if request_data.get_user_data().get_name():
@@ -60,5 +65,4 @@ class Worker:
             "response_id": request_data.get_request_id(),
             "user_data": users
         }
-        logging.info(f"Response: {response}")
         return response

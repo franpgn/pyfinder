@@ -75,7 +75,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             for response in responses["responses"]:
                 if response["request_id"] == target_id:
                     target_response = response
-                    print(target_response)
                     break
 
             if not target_response:
@@ -83,7 +82,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 return
 
             data_list = target_response["user_data"]
-            print(data_list)
             model = QtGui.QStandardItemModel()
             model.setHorizontalHeaderLabels(["Name", "CPF", "Gender", "Birth Date"])
 

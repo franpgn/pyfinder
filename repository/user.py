@@ -3,7 +3,6 @@ from unidecode import unidecode
 
 class User:
     def __init__(self, name: str, cpf, gender, date):
-        print("DEBUG gender raw:", repr(gender))
         self.__name = unidecode(name.upper()) or ""
         self.__cpf = cpf.replace(".", "").replace("-", "") or ""
         self.__gender = "Female" if (gender == "F" or gender == "Female") else ( "Male" if (gender == "M" or gender == "Male") else ( "" if gender == "" else ""))
