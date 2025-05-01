@@ -39,7 +39,6 @@ class ServerRequestHandler(socketserver.BaseRequestHandler):
             self.request.close()
 
     def process_request(self, request_data):
-        # no return value – we’ll reply later
         self.server.pool.apply_async(
             Worker.database_query,
             (request_data, self.server.db_path),

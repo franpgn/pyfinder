@@ -41,7 +41,7 @@ class User:
         user_data = {
                 "nome": unidecode(self.__name.upper()),
                 "cpf": self.__cpf,
-                "gender": "Female" if (self.__gender == "F" or self.__gender == "Female") else ( "Male" if (self.__gender == "M" or self.__gender == "Male") else ( "" if self.__gender == "" else "")),
+                "gender": self.__gender,
                 "date": self.__date
         }
         data = json.dumps(user_data)
@@ -51,7 +51,7 @@ class User:
         user_data = data["user_data"]
         self.__name = unidecode(user_data["nome"].upper())
         self.__cpf = user_data["cpf"]
-        self.__gender = "Female" if (user_data["gender"] == "F" or user_data["gender"] == "Female") else ( "Male" if (user_data["gender"] == "M" or user_data["gender"] == "Male") else ( "" if user_data["gender"] == "" else ""))
+        self.__gender = user_data["gender"]
         self.__date = user_data["data"]
 
         data = {
