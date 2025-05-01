@@ -40,9 +40,9 @@ class ResponseData:
         user_data = data_list["user_data"]
         if isinstance(user_data, list):
             for data in user_data:
-                user_list.append(User(data["name"], data["cpf"], data["date"]))
+                user_list.append(User(data["name"], data["cpf"], data["gender"], data["date"]))
         else:
-            user_list.append(User(user_data["name"], user_data["cpf"], user_data["date"]))
+            user_list.append(User(user_data["name"], user_data["cpf"], user_data["gender"], user_data["date"]))
 
         return ResponseData(response_id, user_list)
 

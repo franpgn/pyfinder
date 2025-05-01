@@ -1,10 +1,8 @@
 import multiprocessing
 import socketserver
 import logging
-import time
 
 from multiprocessing import Pool
-
 from repository.framing import recv_json, send_json
 from repository.response_data import ResponseData
 from repository.worker import Worker
@@ -34,18 +32,30 @@ class ServerRequestHandler(socketserver.BaseRequestHandler):
                     break
                 request_data = RequestData.from_dict(request)
                 self.logger.debug('recv()->"%s"', request_data.to_dict())
-                response = self.process_request(request_data)
-                send_json(self.request, response)
+                self.process_request(request_data)
+        except ConnectionResetError:
+           self.logger.warning("Client dropped connection abruptly")
         finally:
             self.request.close()
 
     def process_request(self, request_data):
-        self.logger.debug('Processing request...')
-        resp = self.server.pool.apply(
+        self.server.pool.apply_async(
             Worker.database_query,
-            (request_data, self.server.db_path)
+            (request_data, self.server.db_path),
+            callback=lambda resp: self._send_back(resp, request_data.get_request_id()),
+            error_callback=self._log_worker_error
         )
-        return ResponseData.import_response(resp).to_dict()
+
+    def _send_back(self, resp, req_id):
+        try:
+            frame = ResponseData.import_response(resp).to_dict()
+            send_json(self.request, frame)
+            self.logger.debug("Sent response for request %s", req_id)
+        except OSError:
+            self.logger.warning("Client socket closed before we could send reply")
+
+    def _log_worker_error(self, exc):
+        self.logger.error("Worker raised: %s", exc)
 
     def finish(self):
         self.logger.debug('Finish')
@@ -79,5 +89,4 @@ class Server(socketserver.ThreadingMixIn, socketserver.TCPServer):
         self.logger.debug('Shutting down server and pool...')
         super().shutdown()
         self.pool.close()
-        self.pool.join()
         self.logger.debug('Pool closed.')

@@ -32,6 +32,7 @@ class RequestData:
             request_id = data["request_id"]
             user_data = User(data["user_data"]["name"],
                              data["user_data"]["cpf"],
+                             data["user_data"]["gender"],
                              data["user_data"]["date"])
             request_data = RequestData(request_id, user_data)
             return request_data

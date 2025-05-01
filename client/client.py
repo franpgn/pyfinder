@@ -1,14 +1,14 @@
-from threading import Thread
 import socket
 import json
 import os
+import logging
 
+from threading import Thread
 from repository.framing import send_json, recv_json
 from repository.request_data import RequestData
 from repository.response_data import ResponseData
 from repository.user import User
 from PyQt5 import QtCore
-import logging
 
 logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s',)
 
@@ -48,13 +48,13 @@ class Client(QtCore.QObject):
             self.logger.debug(f"Connection failed: {e}")
             raise ConnectionError(f"Could not connect to {self.server_ip}:{self.server_port}.\nError: {e}")
 
-    def send_user(self, name, cpf, date):
+    def send_user(self, name, cpf, gender, date):
         if self.sock is None:
             self.logger.debug("Socket is None, cannot send.")
             return
         try:
             self.id_request_increment()
-            user = User(name, cpf, date)
+            user = User(name, cpf, gender, date)
             send_json(self.sock, RequestData(self.request_id, user).to_dict())
             self.logger.debug(f"Sent request {self.request_id}")
         except (BrokenPipeError, OSError) as e:
