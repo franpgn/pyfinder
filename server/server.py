@@ -1,17 +1,15 @@
 import multiprocessing
 import socketserver
 import logging
-import threading
 
 from multiprocessing import Pool
-
+from repository.framing import recv_json, send_json
 from repository.response_data import ResponseData
 from repository.worker import Worker
 from repository.request_data import RequestData
 
 logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s',)
 
-# -*- coding: utf-8 -*-
 class ServerRequestHandler(socketserver.BaseRequestHandler):
     def __init__(self, request, client_address, server):
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -28,13 +26,36 @@ class ServerRequestHandler(socketserver.BaseRequestHandler):
         client_ip, client_port = self.client_address
         self.logger.debug(f"Connected client IP: {client_ip}, Port: {client_port}")
         try:
-            request_data = RequestData.import_request(self.request.recv(4096))
-            self.logger.debug('recv()->"%s"', request_data.to_dict())
-            response = pool.apply(Worker.database_query, (request_data,))
-            response = ResponseData.export_response(ResponseData.import_response(response))
-            self.request.sendall(response)
+            while True:
+                request = recv_json(self.request)
+                if not request:
+                    break
+                request_data = RequestData.from_dict(request)
+                self.logger.debug('recv()->"%s"', request_data.to_dict())
+                self.process_request(request_data)
+        except ConnectionResetError:
+           self.logger.warning("Client dropped connection abruptly")
         finally:
             self.request.close()
+
+    def process_request(self, request_data):
+        self.server.pool.apply_async(
+            Worker.database_query,
+            (request_data, self.server.db_path),
+            callback=lambda resp: self._send_back(resp, request_data.get_request_id()),
+            error_callback=self._log_worker_error
+        )
+
+    def _send_back(self, resp, req_id):
+        try:
+            frame = ResponseData.import_response(resp).to_dict()
+            send_json(self.request, frame)
+            self.logger.debug("Sent response for request %s", req_id)
+        except OSError:
+            self.logger.warning("Client socket closed before we could send reply")
+
+    def _log_worker_error(self, exc):
+        self.logger.error("Worker raised: %s", exc)
 
     def finish(self):
         self.logger.debug('Finish')
@@ -43,10 +64,15 @@ class ServerRequestHandler(socketserver.BaseRequestHandler):
 class Server(socketserver.ThreadingMixIn, socketserver.TCPServer):
     daemon_threads = True
     request_queue_size = 1000
-    def __init__(self, server_address, handler_class=ServerRequestHandler):
+    def __init__(self, server_address, handler_class=ServerRequestHandler, workers: int = None, db_path: str = None):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.debug('Initializing...')
+        self.db_path = db_path
         super().__init__(server_address, handler_class)
+        if workers is None:
+            workers = max(1, multiprocessing.cpu_count() - 1)
+        self.pool = Pool(processes=workers)
+        self.logger.debug(f"Server pool created with {workers} workers.")
         return
 
     def server_activate(self):
@@ -59,20 +85,8 @@ class Server(socketserver.ThreadingMixIn, socketserver.TCPServer):
             self.handle_request()
         return
 
-if __name__ == "__main__":
-    HOST, PORT = "localhost", 9000
-    pool = Pool(processes=max(1, multiprocessing.cpu_count() - 1))
-    server = Server((HOST, PORT), ServerRequestHandler)
-    logger = logging.getLogger('Server')
-    server_thread = threading.Thread(target=server.serve_forever)
-    server_thread.start()
-
-    logger.info('Server on %s:%s', HOST, PORT)
-    try:
-        while True:
-            pass
-    except KeyboardInterrupt: #TROCAR POR CONDIÇÃO DA GUI
-        logger.info('Server shutting down...')
-        server.shutdown()
-        server.server_close()
-        logger.info('Server closed.')
+    def shutdown(self):
+        self.logger.debug('Shutting down server and pool...')
+        super().shutdown()
+        self.pool.close()
+        self.logger.debug('Pool closed.')

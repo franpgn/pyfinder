@@ -29,6 +29,8 @@ class ResponseData:
             data_list = json.loads(data_bytes)
         elif isinstance(data_bytes, dict):
             data_list = data_bytes
+        elif isinstance(data_bytes, bytes):
+            data_list = json.loads(data_bytes.decode('utf-8'))
         else:
             raise TypeError(f"Unsupported data type: {type(data_bytes)}")
 
@@ -38,9 +40,9 @@ class ResponseData:
         user_data = data_list["user_data"]
         if isinstance(user_data, list):
             for data in user_data:
-                user_list.append(User(data["name"], data["cpf"], data["date"]))
+                user_list.append(User(data["name"], data["cpf"], data["gender"], data["date"]))
         else:
-            user_list.append(User(user_data["name"], user_data["cpf"], user_data["date"]))
+            user_list.append(User(user_data["name"], user_data["cpf"], user_data["gender"], user_data["date"]))
 
         return ResponseData(response_id, user_list)
 
@@ -48,14 +50,3 @@ class ResponseData:
     def export_response(response_data):
         response_data = ResponseData(response_data.get_response_id(), response_data.get_user_list_data())
         return json.dumps(response_data.to_dict()).encode('utf-8')
-
-if __name__ == "__main__":
-    # Example usage
-    data = ('{ "response_id": 1, "user_data": [{ "nome": "John Doe", "cpf": "12345678900", "data": "01/01/2000" }, '
-            '{ "nome": "John 2", "cpf": "12345678900", "data": "01/01/2000" }]}').encode('utf-8')
-
-    imported = ResponseData.import_response(data)
-
-    exported = ResponseData.export_response((imported.get_response_id(), imported.get_user_list_data()))
-
-    print(exported)

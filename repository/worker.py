@@ -1,23 +1,27 @@
 # -*- coding: utf-8 -*-
 import os
 import sqlite3
+import logging
 from repository.request_data import RequestData
-from repository.response_data import ResponseData
-from repository.user import User
 
+logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s',)
 
 class Worker:
-    def __init__(self):
-        self.conn = sqlite3.connect('C:/Redes/basecpf.db')
+    def __init__(self, db_path: str):
+        self.conn = sqlite3.connect(db_path)
         self.cursor = self.conn.cursor()
 
     def __del__(self):
         self.conn.close()
 
     @staticmethod
-    def database_query(request_data: RequestData):
-        conn = sqlite3.connect('C:/Redes/basecpf.db')
-        print("PID ATUAL:" + str(os.getpid()))
+    def database_query(request_data: RequestData, db_path: str):
+        logger = logging.getLogger('Worker')
+        conn = sqlite3.connect(db_path)
+
+        logger.info('Database connection established')
+        logger.debug('Current PID : %s', os.getpid())
+
         cursor = conn.cursor()
         query = 'SELECT * FROM cpf WHERE'
         if request_data.get_user_data().get_name():
@@ -52,6 +56,7 @@ class Worker:
             user = {
                 "name": row[1],
                 "cpf": row[0],
+                "gender": row[2],
                 "date": row[3]
             }
             users.append(user)
@@ -61,5 +66,3 @@ class Worker:
             "user_data": users
         }
         return response
-
-
