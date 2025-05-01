@@ -1,8 +1,11 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtGui import QIcon
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
+        MainWindow.setWindowIcon(QIcon("../repository/resources/Icon.png"))
         MainWindow.resize(500, 300)
 
         MainWindow.setStyleSheet("""
