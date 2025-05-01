@@ -63,8 +63,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.spinBox.setRange(1, 64)
         self.spinBox.setValue(4)
 
-    # ---------- UI slots -------------------------------------------------
-
     def _choose_db(self) -> None:
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self,
@@ -80,7 +78,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def _toggle_server(self) -> None:
         if self._server and self._server.is_alive():
-            # --- stop the running server ---------------------------------
             self._server.stop()
             self._server = None
             self.pushButton_2.setText("Start Server")
@@ -88,7 +85,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                               "Server thread stopped.")
             return
 
-        # --- start a new server ------------------------------------------
         try:
             ip = self.lineEdit_ip.text() or self.lineEdit_ip.placeholderText()
             port = int(self.lineEdit_port.text() or self.lineEdit_port.placeholderText())
@@ -113,8 +109,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             f"Listening on {ip}:{port} with {workers} workers.\n"
             f"DB: {self._db_path}"
         )
-
-    # ---------- clean shutdown -------------------------------------------
 
     def closeEvent(self, event: QtCore.QCloseEvent) -> None:
         if self._server and self._server.is_alive():
