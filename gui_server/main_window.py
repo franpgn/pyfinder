@@ -55,17 +55,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._db_path: Optional[Path] = None
         self._server: Optional[DummyServer] = None
 
-        # wire-up signals
-        self.pushButton.clicked.connect(self._choose_db)       # Open DB
-        self.pushButton_2.clicked.connect(self._toggle_server) # Start / Stop
+        self.pushButton.clicked.connect(self._choose_db)
+        self.pushButton_2.clicked.connect(self._toggle_server)
 
-        # sensible defaults
-        self.lineEdit_port.setPlaceholderText("9000")  # default port
-        self.lineEdit_ip.setPlaceholderText("127.0.0.1")  # default IP
+        self.lineEdit_port.setPlaceholderText("9000")
+        self.lineEdit_ip.setPlaceholderText("0.0.0.0")
         self.spinBox.setRange(1, 64)
         self.spinBox.setValue(4)
-
-    # ---------- UI slots -------------------------------------------------
 
     def _choose_db(self) -> None:
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
@@ -82,7 +78,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def _toggle_server(self) -> None:
         if self._server and self._server.is_alive():
-            # --- stop the running server ---------------------------------
             self._server.stop()
             self._server = None
             self.pushButton_2.setText("Start Server")
@@ -90,7 +85,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                               "Server thread stopped.")
             return
 
-        # --- start a new server ------------------------------------------
         try:
             ip = self.lineEdit_ip.text() or self.lineEdit_ip.placeholderText()
             port = int(self.lineEdit_port.text() or self.lineEdit_port.placeholderText())
@@ -115,8 +109,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             f"Listening on {ip}:{port} with {workers} workers.\n"
             f"DB: {self._db_path}"
         )
-
-    # ---------- clean shutdown -------------------------------------------
 
     def closeEvent(self, event: QtCore.QCloseEvent) -> None:
         if self._server and self._server.is_alive():
