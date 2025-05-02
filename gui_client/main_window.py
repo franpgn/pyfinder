@@ -110,6 +110,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.nextButton.setEnabled(False)
             return
 
+        self.idLabel.setText(f"Request ID: {self.client.lista_id[self.current_index]}")
+
         if self.current_index <= 0:
             self.previousButton.setEnabled(False)
         else:

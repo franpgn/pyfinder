@@ -170,6 +170,14 @@ class Ui_MainWindow(object):
         self.previousButton.setObjectName("previousButton")
         self.buttonLayout.addWidget(self.previousButton)
 
+        # ── NEW: Add label to display current request ID ──
+        self.idLabel = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        self.idLabel.setObjectName("idLabel")
+        self.idLabel.setText("")  # start empty
+        self.idLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.buttonLayout.addWidget(self.idLabel)
+        # ─────────────────────────────────────────────────
+
         self.nextButton = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
         self.nextButton.setText("Next")
         self.nextButton.setObjectName("nextButton")
