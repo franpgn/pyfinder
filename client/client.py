@@ -23,13 +23,13 @@ class Client(QtCore.QObject):
         self.server_ip = server_ip
         self.server_port = server_port
 
-        ctx = ssl.create_default_context(
+        self.tls_ctx = ssl.create_default_context(
             ssl.Purpose.SERVER_AUTH,
             cafile="../tls/ca/ca.crt"
         )
-        ctx.check_hostname = True
-        ctx.verify_mode = ssl.CERT_REQUIRED
-        ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+        self.tls_ctx.check_hostname = True
+        self.tls_ctx.verify_mode = ssl.CERT_REQUIRED
+        self.tls_ctx.minimum_version = ssl.TLSVersion.TLSv1_2
 
         self.sock = None
         try:
@@ -53,7 +53,6 @@ class Client(QtCore.QObject):
                     pass
 
             raw = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            # wrap *before* connect so SNI / hostname verification works
             self.sock = self.tls_ctx.wrap_socket(
                 raw,
                 server_hostname=self.server_ip
