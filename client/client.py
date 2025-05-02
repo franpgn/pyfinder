@@ -23,11 +23,13 @@ class Client(QtCore.QObject):
         self.server_ip = server_ip
         self.server_port = server_port
 
-        self.tls_ctx = ssl.create_default_context(
+        ctx = ssl.create_default_context(
             ssl.Purpose.SERVER_AUTH,
-            cafile="../tls/ca.crt"
+            cafile="../tls/ca/ca.crt"
         )
-        self.tls_ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+        ctx.check_hostname = True
+        ctx.verify_mode = ssl.CERT_REQUIRED
+        ctx.minimum_version = ssl.TLSVersion.TLSv1_2
 
         self.sock = None
         try:
