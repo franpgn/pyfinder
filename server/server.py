@@ -1,6 +1,7 @@
 import multiprocessing
 import socketserver
 import logging
+import ssl
 
 from multiprocessing import Pool
 from repository.framing import recv_json, send_json
@@ -64,6 +65,13 @@ class ServerRequestHandler(socketserver.BaseRequestHandler):
 class Server(socketserver.ThreadingMixIn, socketserver.TCPServer):
     daemon_threads = True
     request_queue_size = 1000
+    _tls_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    _tls_ctx.load_cert_chain(
+        certfile="../tls/server.crt",
+        keyfile="../tls/server.key"
+    )
+    _tls_ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+
     def __init__(self, server_address, handler_class=ServerRequestHandler, workers: int = None, db_path: str = None):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.debug('Initializing...')
@@ -74,6 +82,11 @@ class Server(socketserver.ThreadingMixIn, socketserver.TCPServer):
         self.pool = Pool(processes=workers)
         self.logger.debug(f"Server pool created with {workers} workers.")
         return
+
+    def get_request(self):
+        raw_sock, addr = super().get_request()
+        tls_sock = self._tls_ctx.wrap_socket(raw_sock, server_side=True)
+        return tls_sock, addr
 
     def server_activate(self):
         self.logger.debug('Server is Active!')
@@ -90,3 +103,5 @@ class Server(socketserver.ThreadingMixIn, socketserver.TCPServer):
         super().shutdown()
         self.pool.close()
         self.logger.debug('Pool closed.')
+
+

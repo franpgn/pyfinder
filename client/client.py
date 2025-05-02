@@ -2,6 +2,7 @@ import socket
 import json
 import os
 import logging
+import ssl
 
 from threading import Thread
 from repository.framing import send_json, recv_json
@@ -16,10 +17,19 @@ class Client(QtCore.QObject):
     response_received = QtCore.pyqtSignal()
     def __init__(self, server_ip, server_port):
         super().__init__()
+
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.debug('__init__')
         self.server_ip = server_ip
         self.server_port = server_port
+
+        self.tls_ctx = ssl.create_default_context(
+            ssl.Purpose.SERVER_AUTH,
+            cafile="../tls/ca.crt"
+        )
+        self.tls_ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+
+        self.sock = None
         try:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         except Exception as e:
@@ -37,16 +47,22 @@ class Client(QtCore.QObject):
                     self.sock.getpeername()
                     self.sock.shutdown(socket.SHUT_RDWR)
                     self.sock.close()
-                    self.logger.debug("Previous socket closed successfully before reconnecting.")
                 except OSError:
-                    self.logger.debug("Socket was not connected. Creating a new one.")
+                    pass
 
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            raw = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # wrap *before* connect so SNI / hostname verification works
+            self.sock = self.tls_ctx.wrap_socket(
+                raw,
+                server_hostname=self.server_ip
+            )
             self.sock.connect((self.server_ip, self.server_port))
-            self.logger.debug(f"Connected to {self.server_ip}:{self.server_port}")
+            self.logger.debug(f"TLS handshake OK → {self.sock.version()}")
         except Exception as e:
             self.logger.debug(f"Connection failed: {e}")
-            raise ConnectionError(f"Could not connect to {self.server_ip}:{self.server_port}.\nError: {e}")
+            raise ConnectionError(
+                f"Could not connect to {self.server_ip}:{self.server_port}.\nError: {e}"
+            )
 
     def send_user(self, name, cpf, gender, date):
         if self.sock is None:
