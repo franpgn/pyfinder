@@ -1,1 +1,6 @@
 .idea
+/tls/ca.key
+/tls/ca.srl
+/tls/server.crt
+/tls/server.key
+/tls/server.csr
