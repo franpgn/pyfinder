@@ -103,5 +103,3 @@ class Server(socketserver.ThreadingMixIn, socketserver.TCPServer):
         super().shutdown()
         self.pool.close()
         self.logger.debug('Pool closed.')
-
-
