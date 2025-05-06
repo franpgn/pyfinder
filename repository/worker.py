@@ -24,66 +24,39 @@ class Worker:
 
         cursor = conn.cursor()
         query = 'SELECT * FROM cpf WHERE'
+
         # fetch inputs once
         name = request_data.get_user_data().get_name()
         cpf = request_data.get_user_data().get_cpf()
         date = request_data.get_user_data().get_date()
 
+        # Build the query based on available filters
+        conditions = []
+        params = []
+
         if name:
-            query += ' nome LIKE ?'
-            if cpf:
-                query += ' AND cpf = ?'
-                if date:
-                    query += ' AND nasc = ?'
-                    query += ' LIMIT 1000'
-                    cursor.execute(
-                        query,
-                        (f'%{name}%', cpf, date)
-                    )
-                else:
-                    query += ' LIMIT 1000'
-                    cursor.execute(
-                        query,
-                        (f'%{name}%', cpf)
-                    )
-            else:
-                query += ' LIMIT 1000'
-                cursor.execute(
-                    query,
-                    (f'%{name}%',)
-                )
+            conditions.append('nome LIKE ?')
+            params.append(f'%{name}%')
 
-        elif cpf:
-            query += ' cpf = ?'
-            if date:
-                query += ' AND nasc = ?'
-                query += ' LIMIT 1000'
-                cursor.execute(
-                    query,
-                    (cpf, date)
-                )
-            else:
-                query += ' LIMIT 1000'
-                cursor.execute(
-                    query,
-                    (cpf,)
-                )
+        if cpf:
+            conditions.append('cpf = ?')
+            params.append(cpf)
 
-        elif date:
-            query += ' nasc = ?'
-            if name:
-                query += ' AND nome LIKE ?'
-                query += ' LIMIT 1000'
-                cursor.execute(
-                    query,
-                    (date, f'%{name}%')
-                )
-            else:
-                query += ' LIMIT 1000'
-                cursor.execute(
-                    query,
-                    (date,)
-                )
+        if date:
+            conditions.append('nasc = ?')
+            params.append(date)
+
+        # If no conditions were added, the query should be invalid
+        if not conditions:
+            raise ValueError("At least one filter (name, cpf, or date) is required.")
+
+        # Join all conditions with AND and ensure there is space before AND
+        query += ' ' + ' AND '.join(conditions)
+
+        query += ' LIMIT 1000'
+
+        # Execute the query with the parameters
+        cursor.execute(query, tuple(params))
 
         result = cursor.fetchall()
 

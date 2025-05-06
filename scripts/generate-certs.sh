@@ -4,7 +4,7 @@ export MSYS_NO_PATHCONV=1
 export MSYS2_ARG_CONV_EXCL="*"
 cd "$(dirname "$0")"
 
-IP="10.3.175.93"
+IP="192.168.0.102"
 ORG="PampaComputing"
 TLS_DIR="../tls"
 mkdir -p "$TLS_DIR/ca"
