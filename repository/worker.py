@@ -24,38 +24,67 @@ class Worker:
 
         cursor = conn.cursor()
         query = 'SELECT * FROM cpf WHERE'
-        if request_data.get_user_data().get_name():
-            query += ' nome LIKE %?%'
-            if request_data.get_user_data().get_cpf():
+        # fetch inputs once
+        name = request_data.get_user_data().get_name()
+        cpf = request_data.get_user_data().get_cpf()
+        date = request_data.get_user_data().get_date()
+
+        if name:
+            query += ' nome LIKE ?'
+            if cpf:
                 query += ' AND cpf = ?'
-                if request_data.get_user_data().get_date():
+                if date:
                     query += ' AND nasc = ?'
-                    query += ' LIMIT 0, 1000'
-                    cursor.execute(query, (request_data.get_user_data().get_name(), request_data.get_user_data().get_cpf(), request_data.get_user_data().get_date()))
+                    query += ' LIMIT 1000'
+                    cursor.execute(
+                        query,
+                        (f'%{name}%', cpf, date)
+                    )
                 else:
-                    query += ' LIMIT 0, 1000'
-                    cursor.execute(query, (request_data.get_user_data().get_name(), request_data.get_user_data().get_cpf()))
-            else:
-                query += ' LIMIT 0, 1000'
-                cursor.execute(query, (request_data.get_user_data().get_name(),))
-        elif request_data.get_user_data().get_cpf():
-            query += ' cpf = ?'
-            if request_data.get_user_data().get_date():
-                query += ' AND nasc = ?'
-                query += ' LIMIT 0, 1000'
-                cursor.execute(query, (request_data.get_user_data().get_cpf(), request_data.get_user_data().get_date()))
+                    query += ' LIMIT 1000'
+                    cursor.execute(
+                        query,
+                        (f'%{name}%', cpf)
+                    )
             else:
                 query += ' LIMIT 1000'
-                cursor.execute(query, (request_data.get_user_data().get_cpf(),))
-        elif request_data.get_user_data().get_date():
-            query += ' nasc = ?'
-            if request_data.get_user_data().get_name():
-                query += ' AND nome LIKE %?%'
-                query += ' LIMIT 0, 1000'
-                cursor.execute(query, (request_data.get_user_data().get_date(), request_data.get_user_data().get_name()))
+                cursor.execute(
+                    query,
+                    (f'%{name}%',)
+                )
+
+        elif cpf:
+            query += ' cpf = ?'
+            if date:
+                query += ' AND nasc = ?'
+                query += ' LIMIT 1000'
+                cursor.execute(
+                    query,
+                    (cpf, date)
+                )
             else:
-                query += ' LIMIT 0, 1000'
-                cursor.execute(query, (request_data.get_user_data().get_date(),))
+                query += ' LIMIT 1000'
+                cursor.execute(
+                    query,
+                    (cpf,)
+                )
+
+        elif date:
+            query += ' nasc = ?'
+            if name:
+                query += ' AND nome LIKE ?'
+                query += ' LIMIT 1000'
+                cursor.execute(
+                    query,
+                    (date, f'%{name}%')
+                )
+            else:
+                query += ' LIMIT 1000'
+                cursor.execute(
+                    query,
+                    (date,)
+                )
+
         result = cursor.fetchall()
 
         users = []
