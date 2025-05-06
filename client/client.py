@@ -27,7 +27,7 @@ class Client(QtCore.QObject):
             ssl.Purpose.SERVER_AUTH,
             cafile="../tls/ca/ca.crt"
         )
-        self.tls_ctx.check_hostname = False
+        self.tls_ctx.check_hostname = True
         self.tls_ctx.verify_mode = ssl.CERT_REQUIRED
         self.tls_ctx.minimum_version = ssl.TLSVersion.TLSv1_2
 
