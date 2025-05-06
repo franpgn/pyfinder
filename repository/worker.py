@@ -25,29 +25,36 @@ class Worker:
         cursor = conn.cursor()
         query = 'SELECT * FROM cpf WHERE'
         if request_data.get_user_data().get_name():
-            query += ' nome = ?'
+            query += ' nome LIKE %?%'
             if request_data.get_user_data().get_cpf():
                 query += ' AND cpf = ?'
                 if request_data.get_user_data().get_date():
                     query += ' AND nasc = ?'
+                    query += ' LIMIT 0, 1000'
                     cursor.execute(query, (request_data.get_user_data().get_name(), request_data.get_user_data().get_cpf(), request_data.get_user_data().get_date()))
                 else:
+                    query += ' LIMIT 0, 1000'
                     cursor.execute(query, (request_data.get_user_data().get_name(), request_data.get_user_data().get_cpf()))
             else:
+                query += ' LIMIT 0, 1000'
                 cursor.execute(query, (request_data.get_user_data().get_name(),))
         elif request_data.get_user_data().get_cpf():
             query += ' cpf = ?'
             if request_data.get_user_data().get_date():
                 query += ' AND nasc = ?'
+                query += ' LIMIT 0, 1000'
                 cursor.execute(query, (request_data.get_user_data().get_cpf(), request_data.get_user_data().get_date()))
             else:
+                query += ' LIMIT 1000'
                 cursor.execute(query, (request_data.get_user_data().get_cpf(),))
         elif request_data.get_user_data().get_date():
             query += ' nasc = ?'
             if request_data.get_user_data().get_name():
-                query += ' AND nome = ?'
+                query += ' AND nome LIKE %?%'
+                query += ' LIMIT 0, 1000'
                 cursor.execute(query, (request_data.get_user_data().get_date(), request_data.get_user_data().get_name()))
             else:
+                query += ' LIMIT 0, 1000'
                 cursor.execute(query, (request_data.get_user_data().get_date(),))
         result = cursor.fetchall()
 
