@@ -5,7 +5,7 @@ export MSYS2_ARG_CONV_EXCL="*"
 export IP_ADDRESS=$(ipconfig | grep "IPv4 Address" | sed -n '2p' | cut -d ':' -f2 | tr -d '[:space:]')
 
 cd "$(dirname "$0")"
-
+mkdir -p "../tls"
 IP="$IP_ADDRESS"
 ORG="PampaComputing"
 TLS_DIR="../tls"
