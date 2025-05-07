@@ -2,14 +2,15 @@
 set -euo pipefail
 export MSYS_NO_PATHCONV=1
 export MSYS2_ARG_CONV_EXCL="*"
+export IP_ADDRESS=$(ipconfig | grep "IPv4 Address" | sed -n '2p' | cut -d ':' -f2 | tr -d '[:space:]')
+
 cd "$(dirname "$0")"
 
-IP="192.168.0.102"
+IP="$IP_ADDRESS"
 ORG="PampaComputing"
 TLS_DIR="../tls"
 mkdir -p "$TLS_DIR/ca"
 
-# 1) Create a tiny CA extensions file
 cat > ca_ext.cnf <<EOF
 [ v3_ca ]
 basicConstraints       = critical,CA:true
@@ -17,16 +18,13 @@ keyUsage               = critical, digitalSignature, keyCertSign, cRLSign
 subjectKeyIdentifier   = hash
 EOF
 
-# 2) Generate the CA private key
 openssl genrsa -out "$TLS_DIR/ca/ca.key" 4096
 
-# 3) Create a CSR for the CA (no SANs needed)
 openssl req -new \
   -key    "$TLS_DIR/ca/ca.key" \
   -subj   "/C=BR/ST=RS/L=Bage/O=$ORG/OU=CA/CN=MyLocalCA" \
   -out    ca.csr
 
-# 4) Self-sign the CA cert WITH the v3_ca extensions
 openssl x509 -req \
   -in       ca.csr \
   -signkey  "$TLS_DIR/ca/ca.key" \
@@ -36,7 +34,49 @@ openssl x509 -req \
   -extensions v3_ca \
   -out      "$TLS_DIR/ca/ca.crt"
 
-# 5) Clean up
 rm -v ca.csr ca_ext.cnf
 
-echo "✅ CA key and cert with CA:true + keyCertSign are in $TLS_DIR/ca"
+echo "CA key and cert with CA:true + keyCertSign are in $TLS_DIR/ca"
+
+cat > server_ext.cnf <<EOF
+[ req ]
+default_bits       = 2048
+prompt             = no
+default_md         = sha256
+distinguished_name = dn
+req_extensions     = v3_req
+[ dn ]
+C  = BR
+ST = RS
+L  = Bage
+O  = PampaComputing
+CN = "$IP_ADDRESS"
+[ v3_req ]
+subjectAltName = @alt_names
+[ alt_names ]
+DNS.1 = localhost
+IP.1  = 127.0.0.1
+IP.2  = "$IP_ADDRESS"
+EOF
+
+openssl genrsa -out server.key 2048
+
+openssl req -new \
+  -key    server.key \
+  -out    server.csr \
+  -config server_ext.cnf
+
+openssl x509 -req \
+  -in       server.csr \
+  -CA       ../tls/ca/ca.crt \
+  -CAkey    ../tls/ca/ca.key \
+  -CAcreateserial \
+  -out      server.crt \
+  -days     825 \
+  -sha256   \
+  -extfile  server_ext.cnf \
+  -extensions v3_req
+
+mv server.crt server.key ../tls/
+
+rm server.csr
