@@ -35,8 +35,9 @@ echo "Using IP Address: $IP_ADDRESS"
 # Proceed with the rest of the script
 cd "$(dirname "$0")"
 mkdir -p "../tls"
-IP="$IP_ADDRESS"
 ORG="PampaComputing"
+BIN_CLIENT_DIR="../bin/client"
+BIN_SERVER_DIR="../bin/server"
 TLS_DIR="../tls"
 mkdir -p "$TLS_DIR/ca"
 
@@ -106,6 +107,8 @@ openssl x509 -req \
   -extfile  server_ext.cnf \
   -extensions v3_req
 
-mv server.crt server.key ../tls/
+cp "$TLS_DIR/ca/ca.crt" "$TLS_DIR/ca/ca.key" "$TLS_DIR/ca/ca.srl" "$BIN_CLIENT_DIR"
+cp server.crt server.key "$BIN_SERVER_DIR"
+mv server.crt server.key "$TLS_DIR"
 
 rm server.csr
