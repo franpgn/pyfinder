@@ -25,7 +25,7 @@ class Client(QtCore.QObject):
 
         self.tls_ctx = ssl.create_default_context(
             ssl.Purpose.SERVER_AUTH,
-            cafile="../tls/ca/ca.crt"
+            cafile="./ca.crt"
         )
         self.tls_ctx.check_hostname = True
         self.tls_ctx.verify_mode = ssl.CERT_REQUIRED

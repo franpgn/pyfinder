@@ -67,8 +67,8 @@ class Server(socketserver.ThreadingMixIn, socketserver.TCPServer):
     request_queue_size = 1000
     _tls_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     _tls_ctx.load_cert_chain(
-        certfile="server.crt",
-        keyfile="server.key"
+        certfile="./server.crt",
+        keyfile="./server.key"
     )
     _tls_ctx.minimum_version = ssl.TLSVersion.TLSv1_2
 
