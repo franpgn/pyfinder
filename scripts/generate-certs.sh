@@ -2,8 +2,32 @@
 set -euo pipefail
 export MSYS_NO_PATHCONV=1
 export MSYS2_ARG_CONV_EXCL="*"
-export IP_ADDRESS=$(ipconfig | grep "IPv4 Address" | sed -n '2p' | cut -d ':' -f2 | tr -d '[:space:]')
 
+#!/bin/bash
+
+# Detect OS type
+OS=$(uname)
+
+if [[ "$OS" == "Linux" ]]; then
+    # For Linux, use hostname -I
+    IP_ADDRESS=$(hostname -I | awk '{print $1}')
+elif [[ "$OS" == "Darwin" ]]; then
+    # For macOS, use ifconfig
+    IP_ADDRESS=$(ifconfig en0 | grep inet | awk '{print $2}' | head -n 1)
+else
+    # For Windows (using Git Bash), use ipconfig
+    IP_ADDRESS=$(ipconfig | grep -A 5 "Ethernet adapter" | grep "IPv4" | head -n 1 | cut -d ':' -f2 | tr -d '[:space:]')
+fi
+
+echo "IP Address: $IP_ADDRESS"
+
+# Validate the IP address format
+if [[ ! "$IP_ADDRESS" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "Invalid IP address format: $IP_ADDRESS"
+    exit 1
+fi
+
+# Proceed with the rest of the script
 cd "$(dirname "$0")"
 mkdir -p "../tls"
 IP="$IP_ADDRESS"
