@@ -12,7 +12,7 @@ C  = BR
 ST = RS
 L  = Bage
 O  = PampaComputing
-CN = IP_ADDRESS
+CN = 192.168.0.102
 
 [ v3_req ]
 subjectAltName = @alt_names
@@ -20,7 +20,7 @@ subjectAltName = @alt_names
 [ alt_names ]
 DNS.1 = localhost
 IP.1  = 127.0.0.1
-IP.2  = IP_ADDRESS
+IP.2  = 192.168.0.102
 
 
 #bash
@@ -32,7 +32,7 @@ export MSYS_NO_PATHCONV=1
 export MSYS2_ARG_CONV_EXCL="*"
 cd "$(dirname "$0")"
 
-IP="IP_ADDRESS"
+IP="192.168.0.102"
 ORG="PampaComputing"
 TLS_DIR="../tls"
 mkdir -p "$TLS_DIR/ca"
