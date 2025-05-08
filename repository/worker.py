@@ -24,31 +24,40 @@ class Worker:
 
         cursor = conn.cursor()
         query = 'SELECT * FROM cpf WHERE'
-        if request_data.get_user_data().get_name():
-            query += ' nome = ?'
-            if request_data.get_user_data().get_cpf():
-                query += ' AND cpf = ?'
-                if request_data.get_user_data().get_date():
-                    query += ' AND nasc = ?'
-                    cursor.execute(query, (request_data.get_user_data().get_name(), request_data.get_user_data().get_cpf(), request_data.get_user_data().get_date()))
-                else:
-                    cursor.execute(query, (request_data.get_user_data().get_name(), request_data.get_user_data().get_cpf()))
-            else:
-                cursor.execute(query, (request_data.get_user_data().get_name(),))
-        elif request_data.get_user_data().get_cpf():
-            query += ' cpf = ?'
-            if request_data.get_user_data().get_date():
-                query += ' AND nasc = ?'
-                cursor.execute(query, (request_data.get_user_data().get_cpf(), request_data.get_user_data().get_date()))
-            else:
-                cursor.execute(query, (request_data.get_user_data().get_cpf(),))
-        elif request_data.get_user_data().get_date():
-            query += ' nasc = ?'
-            if request_data.get_user_data().get_name():
-                query += ' AND nome = ?'
-                cursor.execute(query, (request_data.get_user_data().get_date(), request_data.get_user_data().get_name()))
-            else:
-                cursor.execute(query, (request_data.get_user_data().get_date(),))
+
+        # fetch inputs once
+        name = request_data.get_user_data().get_name()
+        cpf = request_data.get_user_data().get_cpf()
+        date = request_data.get_user_data().get_date()
+
+        # Build the query based on available filters
+        conditions = []
+        params = []
+
+        if name:
+            conditions.append('nome LIKE ?')
+            params.append(f'%{name}%')
+
+        if cpf:
+            conditions.append('cpf = ?')
+            params.append(cpf)
+
+        if date:
+            conditions.append('nasc = ?')
+            params.append(date)
+
+        # If no conditions were added, the query should be invalid
+        if not conditions:
+            raise ValueError("At least one filter (name, cpf, or date) is required.")
+
+        # Join all conditions with AND and ensure there is space before AND
+        query += ' ' + ' AND '.join(conditions)
+
+        query += ' LIMIT 1000'
+
+        # Execute the query with the parameters
+        cursor.execute(query, tuple(params))
+
         result = cursor.fetchall()
 
         users = []

@@ -4,10 +4,10 @@ import logging
 import ssl
 
 from multiprocessing import Pool
-from repository.framing import recv_json, send_json
-from repository.response_data import ResponseData
-from repository.worker import Worker
-from repository.request_data import RequestData
+from framing import recv_json, send_json
+from response_data import ResponseData
+from worker import Worker
+from request_data import RequestData
 
 logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s',)
 
@@ -67,8 +67,8 @@ class Server(socketserver.ThreadingMixIn, socketserver.TCPServer):
     request_queue_size = 1000
     _tls_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     _tls_ctx.load_cert_chain(
-        certfile="../tls/server.crt",
-        keyfile="../tls/server.key"
+        certfile="./server.crt",
+        keyfile="./server.key"
     )
     _tls_ctx.minimum_version = ssl.TLSVersion.TLSv1_2
 

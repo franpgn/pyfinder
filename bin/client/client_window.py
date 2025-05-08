@@ -5,7 +5,7 @@ from PyQt5.QtGui import QIcon
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.setWindowIcon(QIcon("../repository/resources/Icon.png"))
+        MainWindow.setWindowIcon(QIcon("Icon.png"))
         MainWindow.resize(800, 600)
         MainWindow.setStyleSheet("""
         QWidget {

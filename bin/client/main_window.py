@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import json
-from client.client import Client
+from client import Client
 from ip_window import IPDialog
 from client_window import Ui_MainWindow
 

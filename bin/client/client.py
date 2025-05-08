@@ -5,10 +5,10 @@ import logging
 import ssl
 
 from threading import Thread
-from repository.framing import send_json, recv_json
-from repository.request_data import RequestData
-from repository.response_data import ResponseData
-from repository.user import User
+from framing import send_json, recv_json
+from request_data import RequestData
+from response_data import ResponseData
+from user import User
 from PyQt5 import QtCore
 
 logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s',)
@@ -25,7 +25,7 @@ class Client(QtCore.QObject):
 
         self.tls_ctx = ssl.create_default_context(
             ssl.Purpose.SERVER_AUTH,
-            cafile="../tls/ca/ca.crt"
+            cafile="./ca.crt"
         )
         self.tls_ctx.check_hostname = True
         self.tls_ctx.verify_mode = ssl.CERT_REQUIRED
